@@ -31,13 +31,6 @@ type Transaction = {
   type: 'expense' | 'income';
 };
 
-type CategoryData = {
-  name: string;
-  total: number;
-  icon: React.ReactNode;
-  color: string;
-};
-
 const categories = [
   { value: "comida", label: "🍔 Comida", icon: <ShoppingCart className="h-4 w-4" />, color: "bg-orange-500" },
   { value: "transporte", label: "🚗 Transporte", icon: <Car className="h-4 w-4" />, color: "bg-blue-500" },
@@ -82,16 +75,16 @@ export default function EnhancedExpenseTracker() {
         const res = await fetch("/api/expense", { method: "GET" });
         if (res.ok) {
           const data = await res.json();
-          const formattedTransactions = (data.expenses || []).map((exp: any) => ({
+          const formattedTransactions = (data.expenses || []).map((exp: Transaction) => ({
             ...exp,
             type: exp.type || 'expense' // Por compatibilidad con datos existentes
           }));
           setTransactions(formattedTransactions);
         } else {
-          console.error("Error al obtener transacciones");
+          
         }
       } catch (err) {
-        console.error("Error de red al obtener transacciones");
+        
       }
       setFetching(false);
     };
@@ -129,10 +122,10 @@ export default function EnhancedExpenseTracker() {
         setAmount("");
         setCategory("");
       } else {
-        alert("Error al guardar la transacción");
+       
       }
     } catch (err) {
-      alert("Error de red");
+      
     }
     setLoading(false);
   };
