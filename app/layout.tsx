@@ -26,6 +26,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
+        <footer className="text-center text-sm text-gray-500 mt-4">
+        © {new Date().getFullYear()} Expense App By Matias Carrizo. All rights reserved.
+      </footer>
       </body>
     </html>
   );
