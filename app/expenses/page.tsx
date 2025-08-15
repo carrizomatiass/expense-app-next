@@ -319,7 +319,7 @@ export default function EnhancedExpenseTracker() {
               <CardDescription>Registra un nuevo gasto con su categoría</CardDescription>
             </CardHeader>
             <CardContent>
-              <div onSubmit={(e) => handleAddTransaction(e, 'expense')} className="space-y-4">
+              <div onClick ={(e) => handleAddTransaction(e, 'expense')} className="space-y-4">
                 <Input
                   placeholder="Descripción del gasto"
                   value={description}
@@ -363,7 +363,7 @@ export default function EnhancedExpenseTracker() {
               <CardDescription>Registra un nuevo ingreso</CardDescription>
             </CardHeader>
             <CardContent>
-              <div onSubmit={(e) => handleAddTransaction(e, 'income')} className="space-y-4">
+              <div onClick ={(e) => handleAddTransaction(e, 'income')} className="space-y-4">
                 <Input
                   placeholder="Descripción del ingreso"
                   value={description}
