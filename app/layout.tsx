@@ -1,24 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Control de Finanzas - Gestiona tus ingresos y gastos",
-  description: "Aplicación web para gestionar tus finanzas personales. Controla ingresos, gastos, categorías y obtén reportes detallados de tu balance financiero.",
-  keywords: ["finanzas", "gastos", "ingresos", "presupuesto", "dinero", "control financiero", "ahorro"],
-  authors: [{ name: "Matias Carrizo" }],
-  creator: "Matias Carrizo",
-  publisher: "Matias Carrizo",
+  title: 'Control de Finanzas - Gestiona tus ingresos y gastos',
+  description:
+    'Aplicación web para gestionar tus finanzas personales. Controla ingresos, gastos, categorías y obtén reportes detallados de tu balance financiero.',
+  keywords: [
+    'finanzas',
+    'gastos',
+    'ingresos',
+    'presupuesto',
+    'dinero',
+    'control financiero',
+    'ahorro',
+  ],
+  authors: [{ name: 'Matias Carrizo' }],
+  creator: 'Matias Carrizo',
+  publisher: 'Matias Carrizo',
   formatDetection: {
     email: false,
     address: false,
@@ -29,8 +38,9 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: "Control de Finanzas - Gestiona tu dinero inteligentemente",
-    description: "Controla tus ingresos y gastos de manera inteligente. Organiza por categorías, visualiza reportes y mantén tu balance financiero bajo control.",
+    title: 'Control de Finanzas - Gestiona tu dinero inteligentemente',
+    description:
+      'Controla tus ingresos y gastos de manera inteligente. Organiza por categorías, visualiza reportes y mantén tu balance financiero bajo control.',
     url: 'https://expense-app-next.vercel.app/expenses', // Cambia por tu URL de Vercel
     siteName: 'Control de Finanzas',
     images: [
@@ -46,8 +56,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Control de Finanzas - Gestiona tu dinero",
-    description: "Aplicación web para controlar ingresos, gastos y balance financiero",
+    title: 'Control de Finanzas - Gestiona tu dinero',
+    description:
+      'Aplicación web para controlar ingresos, gastos y balance financiero',
     images: ['/og-image.png'], // Opcional: misma imagen que OpenGraph
   },
   robots: {
@@ -88,11 +99,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         {children}
-        <footer className="text-center text-sm text-gray-500 mt-4">
-        © {new Date().getFullYear()} Expense App By Matias Carrizo. All rights reserved.
-      </footer>
       </body>
     </html>
   );
