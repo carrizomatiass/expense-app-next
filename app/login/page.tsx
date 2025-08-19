@@ -1,7 +1,6 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function LoginPage() {
+// Componente separado que usa useSearchParams
+function LoginForm() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -86,88 +86,111 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-          <p className="text-gray-600">
-            Accede a tu cuenta de control de gastos
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="email"
-                name="email"
-                placeholder="Correo electrónico"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Input
-                type="password"
-                name="password"
-                placeholder="Contraseña"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            {successMessage && (
-              <Alert className="border-green-200 bg-green-50">
-                <AlertDescription className="text-green-700">
-                  {successMessage}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Iniciando sesión...
-                </div>
-              ) : (
-                'Iniciar Sesión'
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              ¿No tienes una cuenta?{' '}
-              <Link
-                href="/register"
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Regístrate aquí
-              </Link>
-            </p>
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+        <p className="text-gray-600">Accede a tu cuenta de control de gastos</p>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Input
+              type="email"
+              name="email"
+              placeholder="Correo electrónico"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              disabled={isLoading}
+            />
           </div>
 
-          <div className="mt-3 text-center">
+          <div className="space-y-2">
+            <Input
+              type="password"
+              name="password"
+              placeholder="Contraseña"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          {successMessage && (
+            <Alert className="border-green-200 bg-green-50">
+              <AlertDescription className="text-green-700">
+                {successMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Iniciando sesión...
+              </div>
+            ) : (
+              'Iniciar Sesión'
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            ¿No tienes una cuenta?{' '}
             <Link
-              href="/"
-              className="text-xs text-gray-500 hover:text-gray-700"
+              href="/register"
+              className="text-blue-600 hover:text-blue-800 font-medium"
             >
-              ← Volver al inicio
+              Regístrate aquí
             </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+
+        <div className="mt-3 text-center">
+          <Link href="/" className="text-xs text-gray-500 hover:text-gray-700">
+            ← Volver al inicio
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Componente de fallback para el loading
+function LoginFormSkeleton() {
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+        <p className="text-gray-600">Accede a tu cuenta de control de gastos</p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Componente principal
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
+      <Suspense fallback={<LoginFormSkeleton />}>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }
