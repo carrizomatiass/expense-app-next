@@ -35,6 +35,31 @@ import {
   Filter,
 } from 'lucide-react';
 
+// Utilidades para formato de moneda argentina
+function formatCurrencyAR(amount: number): string {
+  return new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function formatInputCurrency(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (!numbers) return '';
+  const num = parseInt(numbers, 10);
+  return formatCurrencyAR(num);
+}
+
+function parseCurrencyInput(value: string): number {
+  const cleanValue = value.replace(/\./g, '');
+  return parseInt(cleanValue, 10) || 0;
+}
+
+function isValidCurrency(value: string): boolean {
+  const cleanValue = value.replace(/\./g, '');
+  return /^\d+$/.test(cleanValue) && cleanValue.length > 0;
+}
+
 // Componente AuthHeader
 interface User {
   email: string;
@@ -59,18 +84,15 @@ function AuthHeader({ user }: AuthHeaderProps) {
       });
 
       if (response.ok) {
-        // Redirigir al login
         window.location.href = '/login';
       } else {
         console.error('Error en logout');
-        // Fallback: eliminar cookie manualmente y redirigir
         document.cookie =
           'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         window.location.href = '/login';
       }
     } catch (error) {
       console.error('Error al hacer logout:', error);
-      // Fallback: eliminar cookie manualmente y redirigir
       document.cookie =
         'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       window.location.href = '/login';
@@ -166,6 +188,7 @@ export default function EnhancedExpenseTracker() {
   const [user, setUser] = useState<User | undefined>();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [displayAmount, setDisplayAmount] = useState(''); // Para mostrar el formato con puntos
   const [category, setCategory] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -190,12 +213,29 @@ export default function EnhancedExpenseTracker() {
     fetchUserInfo();
   }, []);
 
-  // Calcular totales (removiendo puntos para números argentinos)
+  // Manejar cambios en el input de monto
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const formattedValue = formatInputCurrency(inputValue);
+    setDisplayAmount(formattedValue);
+
+    // Guardar el valor sin formato para enviar a la API
+    const numericValue = parseCurrencyInput(formattedValue);
+    setAmount(numericValue.toString());
+  };
+
+  // Función para convertir el amount string a número (compatible con formato anterior)
   const parseAmount = (amount: string) => {
-    // Remueve puntos de separadores de miles y convierte a número
+    // Si es el nuevo formato (solo números), convertir directamente
+    if (/^\d+$/.test(amount)) {
+      return parseInt(amount, 10) || 0;
+    }
+
+    // Si es el formato anterior con puntos como separadores
     return parseFloat(amount.replace(/\./g, '').replace(/,/g, '.')) || 0;
   };
 
+  // Calcular totales
   const totalIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((acc, t) => acc + parseAmount(t.amount), 0);
@@ -216,13 +256,14 @@ export default function EnhancedExpenseTracker() {
           const formattedTransactions = (data.expenses || []).map(
             (exp: Transaction) => ({
               ...exp,
-              type: exp.type || 'expense', // Por compatibilidad con datos existentes
+              type: exp.type || 'expense',
             })
           );
           setTransactions(formattedTransactions);
-        } else {
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('Error fetching transactions:', err);
+      }
       setFetching(false);
     };
     fetchTransactions();
@@ -233,7 +274,7 @@ export default function EnhancedExpenseTracker() {
     type: 'expense' | 'income'
   ) => {
     e.preventDefault();
-    if (!description || !amount) return;
+    if (!description || !amount || !isValidCurrency(displayAmount)) return;
     if (type === 'expense' && !category) return;
 
     setLoading(true);
@@ -243,7 +284,7 @@ export default function EnhancedExpenseTracker() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description,
-          amount,
+          amount: amount, // Enviar sin formato (solo números)
           category: type === 'expense' ? category : 'income',
           type,
         }),
@@ -252,7 +293,7 @@ export default function EnhancedExpenseTracker() {
       if (res.ok) {
         const newTransaction: Transaction = {
           description,
-          amount,
+          amount: amount, // Guardar sin formato
           date: new Date().toISOString(),
           category: type === 'expense' ? category : 'income',
           type,
@@ -260,10 +301,14 @@ export default function EnhancedExpenseTracker() {
         setTransactions([...transactions, newTransaction]);
         setDescription('');
         setAmount('');
+        setDisplayAmount('');
         setCategory('');
       } else {
+        console.error('Error adding transaction');
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('Error:', err);
+    }
     setLoading(false);
   };
 
@@ -311,13 +356,6 @@ export default function EnhancedExpenseTracker() {
     return cat ? cat.label : categoryValue;
   }
 
-  function formatCurrency(amount: number) {
-    return amount.toLocaleString('es-AR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-  }
-
   function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString('es-AR');
   }
@@ -351,7 +389,7 @@ export default function EnhancedExpenseTracker() {
               <div
                 className={`text-lg sm:text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}
               >
-                ${formatCurrency(balance)}
+                ${formatCurrencyAR(balance)}
               </div>
               <p className="text-xs text-muted-foreground">
                 {balance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
@@ -368,7 +406,7 @@ export default function EnhancedExpenseTracker() {
             </CardHeader>
             <CardContent>
               <div className="text-lg sm:text-2xl font-bold text-green-600">
-                ${formatCurrency(totalIncome)}
+                ${formatCurrencyAR(totalIncome)}
               </div>
               <p className="text-xs text-muted-foreground">Total de ingresos</p>
             </CardContent>
@@ -383,7 +421,7 @@ export default function EnhancedExpenseTracker() {
             </CardHeader>
             <CardContent>
               <div className="text-lg sm:text-2xl font-bold text-red-600">
-                ${formatCurrency(totalExpenses)}
+                ${formatCurrencyAR(totalExpenses)}
               </div>
               <p className="text-xs text-muted-foreground">Total de gastos</p>
             </CardContent>
@@ -501,7 +539,7 @@ export default function EnhancedExpenseTracker() {
                         </div>
                         <div className="text-right">
                           <div className="font-medium text-sm sm:text-base">
-                            ${formatCurrency(category.total)}
+                            ${formatCurrencyAR(category.total)}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {totalExpenses > 0
@@ -562,7 +600,7 @@ export default function EnhancedExpenseTracker() {
                           className={`font-medium text-xs sm:text-sm flex-shrink-0 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}
                         >
                           {transaction.type === 'income' ? '+' : '-'}$
-                          {formatCurrency(parseAmount(transaction.amount))}
+                          {formatCurrencyAR(parseAmount(transaction.amount))}
                         </div>
                       </div>
                     ))}
@@ -589,14 +627,17 @@ export default function EnhancedExpenseTracker() {
                     onChange={(e) => setDescription(e.target.value)}
                     className="text-sm sm:text-base"
                   />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Monto"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="text-sm sm:text-base"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
+                    <Input
+                      placeholder="0"
+                      value={displayAmount}
+                      onChange={handleAmountChange}
+                      className="text-sm sm:text-base pl-8"
+                    />
+                  </div>
                   <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="text-sm sm:text-base">
                       <SelectValue placeholder="Selecciona una categoría" />
@@ -611,7 +652,7 @@ export default function EnhancedExpenseTracker() {
                   </Select>
                   <Button
                     onClick={(e) => handleAddTransaction(e, 'expense')}
-                    disabled={loading}
+                    disabled={loading || !isValidCurrency(displayAmount)}
                     className="w-full text-sm sm:text-base"
                   >
                     {loading ? 'Guardando...' : 'Agregar Gasto'}
@@ -639,17 +680,20 @@ export default function EnhancedExpenseTracker() {
                     onChange={(e) => setDescription(e.target.value)}
                     className="text-sm sm:text-base"
                   />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Monto"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="text-sm sm:text-base"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
+                    <Input
+                      placeholder="0"
+                      value={displayAmount}
+                      onChange={handleAmountChange}
+                      className="text-sm sm:text-base pl-8"
+                    />
+                  </div>
                   <Button
                     onClick={(e) => handleAddTransaction(e, 'income')}
-                    disabled={loading}
+                    disabled={loading || !isValidCurrency(displayAmount)}
                     className="w-full text-sm sm:text-base"
                   >
                     {loading ? 'Guardando...' : 'Agregar Ingreso'}
@@ -766,7 +810,7 @@ export default function EnhancedExpenseTracker() {
                                   }`}
                                 >
                                   {transaction.type === 'income' ? '+' : '-'}$
-                                  {formatCurrency(
+                                  {formatCurrencyAR(
                                     parseAmount(transaction.amount)
                                   )}
                                 </div>
@@ -817,7 +861,7 @@ export default function EnhancedExpenseTracker() {
                                   }`}
                                 >
                                   {transaction.type === 'income' ? '+' : '-'}$
-                                  {formatCurrency(
+                                  {formatCurrencyAR(
                                     parseAmount(transaction.amount)
                                   )}
                                 </div>
