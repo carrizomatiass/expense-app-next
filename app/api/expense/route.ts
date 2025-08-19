@@ -2,8 +2,30 @@ import { NextResponse, NextRequest } from 'next/server';
 import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
 
+// Tipos para el proyecto
+interface JWTPayload {
+  email: string;
+  name: string;
+  iat?: number;
+  exp?: number;
+}
+
+interface SheetProperties {
+  title: string;
+}
+
+interface Sheet {
+  properties: SheetProperties;
+}
+
+interface SpreadsheetData {
+  sheets?: Sheet[];
+}
+
 // Función helper para obtener el usuario autenticado
-async function getAuthenticatedUser(request: NextRequest) {
+async function getAuthenticatedUser(
+  request: NextRequest
+): Promise<JWTPayload | null> {
   try {
     const token = request.cookies.get('auth-token')?.value;
 
@@ -14,7 +36,7 @@ async function getAuthenticatedUser(request: NextRequest) {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'fallback-secret'
-    ) as any;
+    ) as JWTPayload;
     return decoded;
   } catch (error) {
     console.error('Error al verificar token:', error);
@@ -23,7 +45,7 @@ async function getAuthenticatedUser(request: NextRequest) {
 }
 
 // Función helper para obtener o crear hoja del usuario
-async function getUserSheetName(userEmail: string) {
+async function getUserSheetName(userEmail: string): Promise<string> {
   // Crear nombre de hoja basado en el email (sin caracteres especiales)
   const sheetName = `expenses_${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
   return sheetName;
@@ -34,15 +56,16 @@ async function ensureUserSheet(
   sheets: any,
   spreadsheetId: string,
   sheetName: string
-) {
+): Promise<string> {
   try {
     // Obtener información del spreadsheet
     const spreadsheet = await sheets.spreadsheets.get({
       spreadsheetId: spreadsheetId,
     });
 
-    const sheetExists = spreadsheet.data.sheets?.some(
-      (sheet: any) => sheet.properties.title === sheetName
+    const spreadsheetData = spreadsheet.data as SpreadsheetData;
+    const sheetExists = spreadsheetData.sheets?.some(
+      (sheet: Sheet) => sheet.properties.title === sheetName
     );
 
     if (!sheetExists) {

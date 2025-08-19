@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
+// Tipo para el payload del JWT
+interface JWTPayload {
+  email: string;
+  name: string;
+  iat?: number;
+  exp?: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value;
@@ -16,7 +24,7 @@ export async function GET(request: NextRequest) {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'fallback-secret'
-    ) as any;
+    ) as JWTPayload;
 
     return NextResponse.json({
       email: decoded.email,
