@@ -33,9 +33,12 @@ import {
   MoreHorizontal,
   Calendar,
   Filter,
+  Plus,
+  Minus,
+  Menu,
+  X,
 } from 'lucide-react';
 
-// Utilidades para formato de moneda argentina
 function formatCurrencyAR(amount: number): string {
   return new Intl.NumberFormat('es-AR', {
     minimumFractionDigits: 0,
@@ -60,7 +63,6 @@ function isValidCurrency(value: string): boolean {
   return /^\d+$/.test(cleanValue) && cleanValue.length > 0;
 }
 
-// Componente AuthHeader
 interface User {
   email: string;
   name: string;
@@ -72,9 +74,11 @@ interface AuthHeaderProps {
 
 function AuthHeader({ user }: AuthHeaderProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    setShowUserMenu(false);
     try {
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
@@ -102,15 +106,16 @@ function AuthHeader({ user }: AuthHeaderProps) {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">
+    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-14 sm:h-16">
+          <div className="flex items-center min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
               Control de Gastos
             </h1>
           </div>
-          <div className="flex items-center space-x-4">
+
+          <div className="hidden sm:flex items-center space-x-4">
             {user && (
               <div className="text-sm text-gray-600">
                 Hola, <span className="font-medium">{user.name}</span>
@@ -124,6 +129,40 @@ function AuthHeader({ user }: AuthHeaderProps) {
             >
               {isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
             </Button>
+          </div>
+
+          <div className="sm:hidden relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              aria-label="Menú de usuario"
+            >
+              {showUserMenu ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
+
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                {user && (
+                  <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100">
+                    <div className="font-medium text-gray-900">{user.name}</div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {isLoggingOut ? 'Cerrando...' : 'Cerrar Sesión'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -188,7 +227,7 @@ export default function EnhancedExpenseTracker() {
   const [user, setUser] = useState<User | undefined>();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [displayAmount, setDisplayAmount] = useState(''); // Para mostrar el formato con puntos
+  const [displayAmount, setDisplayAmount] = useState('');
   const [category, setCategory] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -197,7 +236,6 @@ export default function EnhancedExpenseTracker() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterPeriod, setFilterPeriod] = useState('all');
 
-  // Obtener información del usuario al cargar el componente
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -213,29 +251,23 @@ export default function EnhancedExpenseTracker() {
     fetchUserInfo();
   }, []);
 
-  // Manejar cambios en el input de monto
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     const formattedValue = formatInputCurrency(inputValue);
     setDisplayAmount(formattedValue);
 
-    // Guardar el valor sin formato para enviar a la API
     const numericValue = parseCurrencyInput(formattedValue);
     setAmount(numericValue.toString());
   };
 
-  // Función para convertir el amount string a número (compatible con formato anterior)
   const parseAmount = (amount: string) => {
-    // Si es el nuevo formato (solo números), convertir directamente
     if (/^\d+$/.test(amount)) {
       return parseInt(amount, 10) || 0;
     }
 
-    // Si es el formato anterior con puntos como separadores
     return parseFloat(amount.replace(/\./g, '').replace(/,/g, '.')) || 0;
   };
 
-  // Calcular totales
   const totalIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((acc, t) => acc + parseAmount(t.amount), 0);
@@ -246,7 +278,6 @@ export default function EnhancedExpenseTracker() {
 
   const balance = totalIncome - totalExpenses;
 
-  // Obtener transacciones desde la API
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -284,7 +315,7 @@ export default function EnhancedExpenseTracker() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description,
-          amount: amount, // Enviar sin formato (solo números)
+          amount: amount,
           category: type === 'expense' ? category : 'income',
           type,
         }),
@@ -293,7 +324,7 @@ export default function EnhancedExpenseTracker() {
       if (res.ok) {
         const newTransaction: Transaction = {
           description,
-          amount: amount, // Guardar sin formato
+          amount: amount,
           date: new Date().toISOString(),
           category: type === 'expense' ? category : 'income',
           type,
@@ -312,7 +343,6 @@ export default function EnhancedExpenseTracker() {
     setLoading(false);
   };
 
-  // Calcular gastos por categoría
   const expensesByCategory = categories
     .map((cat) => ({
       ...cat,
@@ -322,7 +352,6 @@ export default function EnhancedExpenseTracker() {
     }))
     .filter((cat) => cat.total > 0);
 
-  // Filtrar transacciones
   const filteredTransactions = transactions.filter((transaction) => {
     const categoryMatch =
       filterCategory === 'all' || transaction.category === filterCategory;
@@ -362,36 +391,33 @@ export default function EnhancedExpenseTracker() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header con autenticación */}
       <AuthHeader user={user} />
 
-      {/* Contenido principal */}
-      <div className="max-w-6xl mx-auto p-2 sm:p-4 space-y-4 sm:space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-6 space-y-4 sm:space-y-6 pb-safe">
+        <div className="text-center space-y-1 sm:space-y-2 py-2 sm:py-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Control de Finanzas
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
             Gestiona tus ingresos y gastos de manera inteligente
           </p>
         </div>
 
-        {/* Cards de resumen */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <Card>
+          <Card className="sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">
+              <CardTitle className="text-sm font-medium">
                 Balance Total
               </CardTitle>
-              <Wallet className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+              <Wallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
-                className={`text-lg sm:text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                className={`text-xl sm:text-2xl font-bold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}
               >
                 ${formatCurrencyAR(balance)}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 {balance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
               </p>
             </CardContent>
@@ -399,40 +425,39 @@ export default function EnhancedExpenseTracker() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">
-                Ingresos
-              </CardTitle>
-              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-2xl font-bold text-green-600">
+              <div className="text-xl sm:text-2xl font-bold text-green-600">
                 ${formatCurrencyAR(totalIncome)}
               </div>
-              <p className="text-xs text-muted-foreground">Total de ingresos</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de ingresos
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="sm:col-span-2 lg:col-span-1">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">
-                Gastos
-              </CardTitle>
-              <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+              <CardTitle className="text-sm font-medium">Gastos</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-lg sm:text-2xl font-bold text-red-600">
+              <div className="text-xl sm:text-2xl font-bold text-red-600">
                 ${formatCurrencyAR(totalExpenses)}
               </div>
-              <p className="text-xs text-muted-foreground">Total de gastos</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de gastos
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Alerta de balance */}
         {balance < 0 && (
           <Alert className="border-red-200 bg-red-50">
             <TrendingDown className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
+            <AlertDescription className="text-red-800 text-sm">
               Tu balance es negativo. Considera revisar tus gastos o aumentar
               tus ingresos.
             </AlertDescription>
@@ -444,69 +469,75 @@ export default function EnhancedExpenseTracker() {
           onValueChange={setActiveTab}
           className="space-y-4"
         >
-          {/* Tabs responsivos */}
           <div className="w-full">
-            {/* Vista desktop/tablet */}
-            <TabsList className="hidden sm:grid w-full grid-cols-4">
-              <TabsTrigger value="dashboard" className="text-xs sm:text-sm">
+            <TabsList className="hidden sm:grid w-full grid-cols-4 h-10">
+              <TabsTrigger value="dashboard" className="text-sm">
                 Dashboard
               </TabsTrigger>
-              <TabsTrigger value="add-expense" className="text-xs sm:text-sm">
+              <TabsTrigger value="add-expense" className="text-sm">
                 Agregar Gasto
               </TabsTrigger>
-              <TabsTrigger value="add-income" className="text-xs sm:text-sm">
+              <TabsTrigger value="add-income" className="text-sm">
                 Agregar Ingreso
               </TabsTrigger>
-              <TabsTrigger value="transactions" className="text-xs sm:text-sm">
+              <TabsTrigger value="transactions" className="text-sm">
                 Transacciones
               </TabsTrigger>
             </TabsList>
 
-            {/* Vista móvil - Botones apilados */}
-            <div className="sm:hidden space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'dashboard'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setActiveTab('transactions')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'transactions'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  Transacciones
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setActiveTab('add-expense')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'add-expense'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  + Gasto
-                </button>
-                <button
-                  onClick={() => setActiveTab('add-income')}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'add-income'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  + Ingreso
-                </button>
+            <div className="sm:hidden">
+              <div className="pb-20"></div>
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-3 py-2 safe-area-inset-bottom">
+                <div className="max-w-6xl mx-auto">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <button
+                      onClick={() => setActiveTab('dashboard')}
+                      className={`flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'dashboard'
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Wallet className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('transactions')}
+                      className={`flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'transactions'
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Historial
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setActiveTab('add-expense')}
+                      className={`flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'add-expense'
+                          ? 'bg-red-500 text-white shadow-lg'
+                          : 'bg-red-50 text-red-700 hover:bg-red-100'
+                      }`}
+                    >
+                      <Minus className="h-4 w-4 mr-2" />
+                      Gasto
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('add-income')}
+                      className={`flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'add-income'
+                          ? 'bg-green-500 text-white shadow-lg'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100'
+                      }`}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ingreso
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -529,16 +560,16 @@ export default function EnhancedExpenseTracker() {
                         key={index}
                         className="flex items-center justify-between"
                       >
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <div
-                            className={`w-3 h-3 rounded-full ${category.color}`}
+                            className={`w-3 h-3 rounded-full flex-shrink-0 ${category.color}`}
                           ></div>
-                          <span className="text-xs sm:text-sm">
+                          <span className="text-sm font-medium truncate">
                             {category.label}
                           </span>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium text-sm sm:text-base">
+                        <div className="text-right flex-shrink-0 ml-2">
+                          <div className="font-semibold text-sm">
                             ${formatCurrencyAR(category.total)}
                           </div>
                           <div className="text-xs text-muted-foreground">
@@ -557,7 +588,6 @@ export default function EnhancedExpenseTracker() {
               </Card>
             )}
 
-            {/* Últimas transacciones */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg sm:text-xl">
@@ -575,32 +605,40 @@ export default function EnhancedExpenseTracker() {
                     .map((transaction, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-muted/30"
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                       >
-                        <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          {transaction.type === 'income' ? (
-                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 flex-shrink-0" />
-                          )}
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <div className="flex-shrink-0">
+                            {transaction.type === 'income' ? (
+                              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                <TrendingUp className="h-4 w-4 text-green-600" />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                <TrendingDown className="h-4 w-4 text-red-600" />
+                              </div>
+                            )}
+                          </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-medium text-xs sm:text-sm truncate">
+                            <div className="font-medium text-sm truncate">
                               {transaction.description}
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              <span className="hidden sm:inline">
-                                {getCategoryLabel(transaction.category || '')}{' '}
-                                •{' '}
+                            <div className="text-xs text-muted-foreground flex items-center space-x-1">
+                              <span className="hidden xs:inline">
+                                {getCategoryLabel(transaction.category || '')}
                               </span>
-                              {formatDate(transaction.date)}
+                              <span className="hidden xs:inline">•</span>
+                              <span>{formatDate(transaction.date)}</span>
                             </div>
                           </div>
                         </div>
-                        <div
-                          className={`font-medium text-xs sm:text-sm flex-shrink-0 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}
-                        >
-                          {transaction.type === 'income' ? '+' : '-'}$
-                          {formatCurrencyAR(parseAmount(transaction.amount))}
+                        <div className="flex-shrink-0 text-right ml-2">
+                          <div
+                            className={`font-bold text-sm ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}
+                          >
+                            {transaction.type === 'income' ? '+' : '-'}$
+                            {formatCurrencyAR(parseAmount(transaction.amount))}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -621,39 +659,67 @@ export default function EnhancedExpenseTracker() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <Input
-                    placeholder="Descripción del gasto"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="text-sm sm:text-base"
-                  />
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      $
-                    </span>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Descripción
+                    </label>
                     <Input
-                      placeholder="0"
-                      value={displayAmount}
-                      onChange={handleAmountChange}
-                      className="text-sm sm:text-base pl-8"
+                      placeholder="¿En qué gastaste?"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="text-base h-12"
+                      autoComplete="off"
                     />
                   </div>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="text-sm sm:text-base">
-                      <SelectValue placeholder="Selecciona una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Monto
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                        $
+                      </span>
+                      <Input
+                        placeholder="0"
+                        value={displayAmount}
+                        onChange={handleAmountChange}
+                        className="text-base h-12 pl-8 text-lg"
+                        inputMode="numeric"
+                        autoComplete="off"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Categoría
+                    </label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger className="text-base h-12">
+                        <SelectValue placeholder="Selecciona una categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem
+                            key={cat.value}
+                            value={cat.value}
+                            className="text-base py-3"
+                          >
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button
                     onClick={(e) => handleAddTransaction(e, 'expense')}
-                    disabled={loading || !isValidCurrency(displayAmount)}
-                    className="w-full text-sm sm:text-base"
+                    disabled={
+                      loading ||
+                      !isValidCurrency(displayAmount) ||
+                      !description ||
+                      !category
+                    }
+                    className="w-full text-base h-12 font-medium mt-6"
+                    size="lg"
                   >
                     {loading ? 'Guardando...' : 'Agregar Gasto'}
                   </Button>
@@ -674,27 +740,43 @@ export default function EnhancedExpenseTracker() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <Input
-                    placeholder="Descripción del ingreso"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="text-sm sm:text-base"
-                  />
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                      $
-                    </span>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Descripción
+                    </label>
                     <Input
-                      placeholder="0"
-                      value={displayAmount}
-                      onChange={handleAmountChange}
-                      className="text-sm sm:text-base pl-8"
+                      placeholder="¿De dónde viene este ingreso?"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="text-base h-12"
+                      autoComplete="off"
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      Monto
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                        $
+                      </span>
+                      <Input
+                        placeholder="0"
+                        value={displayAmount}
+                        onChange={handleAmountChange}
+                        className="text-base h-12 pl-8 text-lg"
+                        inputMode="numeric"
+                        autoComplete="off"
+                      />
+                    </div>
                   </div>
                   <Button
                     onClick={(e) => handleAddTransaction(e, 'income')}
-                    disabled={loading || !isValidCurrency(displayAmount)}
-                    className="w-full text-sm sm:text-base"
+                    disabled={
+                      loading || !isValidCurrency(displayAmount) || !description
+                    }
+                    className="w-full text-base h-12 font-medium mt-6"
+                    size="lg"
                   >
                     {loading ? 'Guardando...' : 'Agregar Ingreso'}
                   </Button>
@@ -714,172 +796,178 @@ export default function EnhancedExpenseTracker() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Filtros responsivos */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
-                  <Select
-                    value={filterCategory}
-                    onValueChange={setFilterCategory}
-                  >
-                    <SelectTrigger className="w-full sm:w-48 text-sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Filtrar por categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las categorías</SelectItem>
-                      <SelectItem value="income">Ingresos</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-3 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">
+                        Categoría
+                      </label>
+                      <Select
+                        value={filterCategory}
+                        onValueChange={setFilterCategory}
+                      >
+                        <SelectTrigger className="text-sm h-10">
+                          <Filter className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="Filtrar por categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">
+                            Todas las categorías
+                          </SelectItem>
+                          <SelectItem value="income">Ingresos</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                    <SelectTrigger className="w-full sm:w-48 text-sm">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Filtrar por período" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todo el tiempo</SelectItem>
-                      <SelectItem value="week">Esta semana</SelectItem>
-                      <SelectItem value="month">Este mes</SelectItem>
-                      <SelectItem value="year">Este año</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Tabla responsiva */}
-                <div className="space-y-2">
-                  {/* Vista desktop */}
-                  <div className="hidden md:block">
-                    <div className="bg-white rounded-lg border overflow-hidden">
-                      <div className="bg-gray-50 px-4 py-3 border-b">
-                        <div className="grid grid-cols-5 gap-4 text-sm font-medium text-gray-900">
-                          <div>Tipo</div>
-                          <div>Descripción</div>
-                          <div>Categoría</div>
-                          <div>Fecha</div>
-                          <div className="text-right">Monto</div>
-                        </div>
-                      </div>
-                      <div className="divide-y max-h-96 overflow-y-auto">
-                        {fetching ? (
-                          <div className="px-4 py-8 text-center text-gray-500">
-                            Cargando...
-                          </div>
-                        ) : filteredTransactions.length === 0 ? (
-                          <div className="px-4 py-8 text-center text-gray-500">
-                            No hay transacciones que mostrar
-                          </div>
-                        ) : (
-                          filteredTransactions
-                            .reverse()
-                            .map((transaction, idx) => (
-                              <div
-                                key={idx}
-                                className="px-4 py-3 grid grid-cols-5 gap-4 items-center hover:bg-gray-50"
-                              >
-                                <div>
-                                  <Badge
-                                    variant={
-                                      transaction.type === 'income'
-                                        ? 'default'
-                                        : 'secondary'
-                                    }
-                                  >
-                                    {transaction.type === 'income'
-                                      ? 'Ingreso'
-                                      : 'Gasto'}
-                                  </Badge>
-                                </div>
-                                <div className="font-medium text-sm">
-                                  {transaction.description}
-                                </div>
-                                <div className="text-sm">
-                                  {getCategoryLabel(transaction.category || '')}
-                                </div>
-                                <div className="text-sm">
-                                  {formatDate(transaction.date)}
-                                </div>
-                                <div
-                                  className={`text-right font-medium text-sm ${
-                                    transaction.type === 'income'
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {transaction.type === 'income' ? '+' : '-'}$
-                                  {formatCurrencyAR(
-                                    parseAmount(transaction.amount)
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                        )}
-                      </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">
+                        Período
+                      </label>
+                      <Select
+                        value={filterPeriod}
+                        onValueChange={setFilterPeriod}
+                      >
+                        <SelectTrigger className="text-sm h-10">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="Filtrar por período" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todo el tiempo</SelectItem>
+                          <SelectItem value="week">Esta semana</SelectItem>
+                          <SelectItem value="month">Este mes</SelectItem>
+                          <SelectItem value="year">Este año</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
+                </div>
 
-                  {/* Vista móvil - Cards */}
-                  <div className="md:hidden space-y-3">
-                    {fetching ? (
-                      <div className="text-center text-gray-500 py-8">
-                        Cargando...
+                <div className="space-y-2">
+                  {fetching ? (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      <p className="text-sm text-gray-500">
+                        Cargando transacciones...
+                      </p>
+                    </div>
+                  ) : filteredTransactions.length === 0 ? (
+                    <div className="text-center py-12 space-y-3">
+                      <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                        <Calendar className="h-8 w-8 text-gray-400" />
                       </div>
-                    ) : filteredTransactions.length === 0 ? (
-                      <div className="text-center text-gray-500 py-8">
+                      <p className="text-gray-500 text-sm">
                         No hay transacciones que mostrar
+                      </p>
+                      <p className="text-gray-400 text-xs">
+                        Intenta cambiar los filtros o agrega una nueva
+                        transacción
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-3 pb-2 border-b">
+                        <span>{filteredTransactions.length} transacciones</span>
+                        <div className="flex space-x-2">
+                          {filterCategory !== 'all' && (
+                            <Badge variant="secondary" className="text-xs">
+                              {getCategoryLabel(filterCategory)}
+                            </Badge>
+                          )}
+                          {filterPeriod !== 'all' && (
+                            <Badge variant="secondary" className="text-xs">
+                              {filterPeriod === 'week'
+                                ? 'Esta semana'
+                                : filterPeriod === 'month'
+                                  ? 'Este mes'
+                                  : filterPeriod === 'year'
+                                    ? 'Este año'
+                                    : filterPeriod}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
+
+                      <div className="max-h-96 overflow-y-auto space-y-2">
                         {filteredTransactions
+                          .slice()
                           .reverse()
                           .map((transaction, idx) => (
                             <div
                               key={idx}
-                              className="bg-white border rounded-lg p-3 space-y-2"
+                              className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg hover:shadow-sm transition-all duration-200 active:scale-98"
                             >
-                              <div className="flex items-center justify-between">
-                                <Badge
-                                  variant={
-                                    transaction.type === 'income'
-                                      ? 'default'
-                                      : 'secondary'
-                                  }
-                                  className="text-xs"
-                                >
-                                  {transaction.type === 'income'
-                                    ? 'Ingreso'
-                                    : 'Gasto'}
-                                </Badge>
-                                <div
-                                  className={`font-bold text-sm ${
-                                    transaction.type === 'income'
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }`}
-                                >
-                                  {transaction.type === 'income' ? '+' : '-'}$
-                                  {formatCurrencyAR(
-                                    parseAmount(transaction.amount)
+                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                <div className="flex-shrink-0">
+                                  {transaction.type === 'income' ? (
+                                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                      <TrendingUp className="h-5 w-5 text-green-600" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                      <TrendingDown className="h-5 w-5 text-red-600" />
+                                    </div>
                                   )}
                                 </div>
-                              </div>
-                              <div className="text-sm font-medium">
-                                {transaction.description}
-                              </div>
-                              <div className="flex items-center justify-between text-xs text-gray-500">
-                                <span>
-                                  {getCategoryLabel(transaction.category || '')}
-                                </span>
-                                <span>{formatDate(transaction.date)}</span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="font-medium text-sm truncate mb-1">
+                                        {transaction.description}
+                                      </h4>
+                                      <div className="flex items-center text-xs text-gray-500 space-x-2">
+                                        <span className="flex items-center">
+                                          {getCategoryLabel(
+                                            transaction.category || ''
+                                          )}
+                                        </span>
+                                        <span>•</span>
+                                        <span>
+                                          {formatDate(transaction.date)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right ml-3 flex-shrink-0">
+                                      <div
+                                        className={`font-bold text-base ${
+                                          transaction.type === 'income'
+                                            ? 'text-green-600'
+                                            : 'text-red-600'
+                                        }`}
+                                      >
+                                        {transaction.type === 'income'
+                                          ? '+'
+                                          : '-'}
+                                        $
+                                        {formatCurrencyAR(
+                                          parseAmount(transaction.amount)
+                                        )}
+                                      </div>
+                                      <Badge
+                                        variant={
+                                          transaction.type === 'income'
+                                            ? 'default'
+                                            : 'secondary'
+                                        }
+                                        className="text-xs mt-1"
+                                      >
+                                        {transaction.type === 'income'
+                                          ? 'Ingreso'
+                                          : 'Gasto'}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

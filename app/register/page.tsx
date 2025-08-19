@@ -78,7 +78,7 @@ export default function RegisterPage() {
 
       if (response.ok) {
         setSuccess(true);
-        // Redirigir al login después de 2 segundos
+
         setTimeout(() => {
           router.push('/login?message=registered');
         }, 2000);
@@ -94,18 +94,23 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="text-green-600 text-4xl">✓</div>
-              <h2 className="text-2xl font-bold text-green-600">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 sm:p-6">
+        <Card className="w-full max-w-sm sm:max-w-md shadow-lg border-0 sm:border">
+          <CardContent className="pt-8 pb-8 px-4 sm:px-6">
+            <div className="text-center space-y-4 sm:space-y-6">
+              <div className="text-green-600 text-4xl sm:text-5xl lg:text-6xl">
+                ✓
+              </div>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">
                 ¡Registro Exitoso!
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 Tu cuenta ha sido creada exitosamente. Serás redirigido al login
                 en unos segundos...
               </p>
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-green-600"></div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -114,96 +119,112 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Crear Cuenta</CardTitle>
-          <p className="text-gray-600">
-            Regístrate para comenzar a controlar tus gastos
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="text"
-                name="name"
-                placeholder="Nombre completo"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Input
-                type="email"
-                name="email"
-                placeholder="Correo electrónico"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Input
-                type="password"
-                name="password"
-                placeholder="Contraseña (mín. 6 caracteres)"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-                minLength={6}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirmar contraseña"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creando cuenta...
-                </div>
-              ) : (
-                'Crear Cuenta'
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              ¿Ya tienes una cuenta?{' '}
-              <Link
-                href="/login"
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Inicia sesión aquí
-              </Link>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg">
+        <Card className="w-full shadow-lg border-0 sm:border">
+          <CardHeader className="text-center px-4 sm:px-6 pt-6 sm:pt-8">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold">
+              Crear Cuenta
+            </CardTitle>
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+              Regístrate para comenzar a controlar tus gastos
             </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+            <form onSubmit={handleRegister} className="space-y-4 sm:space-y-5">
+              <div className="space-y-2">
+                <Input
+                  type="text"
+                  name="name"
+                  placeholder="Nombre completo"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isLoading}
+                  className="h-11 sm:h-12 text-base"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="Correo electrónico"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isLoading}
+                  className="h-11 sm:h-12 text-base"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="Contraseña (mín. 6 caracteres)"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isLoading}
+                  minLength={6}
+                  className="h-11 sm:h-12 text-base"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirmar contraseña"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  required
+                  disabled={isLoading}
+                  className="h-11 sm:h-12 text-base"
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription className="text-sm sm:text-base">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-11 sm:h-12 text-base font-semibold"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <span className="text-sm sm:text-base">
+                      Creando cuenta...
+                    </span>
+                  </div>
+                ) : (
+                  'Crear Cuenta'
+                )}
+              </Button>
+            </form>
+
+            <div className="mt-6 sm:mt-8 text-center">
+              <p className="text-sm sm:text-base text-gray-600">
+                ¿Ya tienes una cuenta?{' '}
+                <Link
+                  href="/login"
+                  className="text-blue-600 hover:text-blue-800 font-medium underline-offset-4 hover:underline transition-colors"
+                >
+                  Inicia sesión aquí
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

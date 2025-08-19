@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from 'next/server';
 import { google } from 'googleapis';
 import jwt from 'jsonwebtoken';
 
-// Tipos para el proyecto
 interface JWTPayload {
   email: string;
   name: string;
@@ -22,7 +21,6 @@ interface SpreadsheetData {
   sheets?: Sheet[];
 }
 
-// Función helper para obtener el usuario autenticado
 async function getAuthenticatedUser(
   request: NextRequest
 ): Promise<JWTPayload | null> {
@@ -44,21 +42,17 @@ async function getAuthenticatedUser(
   }
 }
 
-// Función helper para obtener o crear hoja del usuario
 async function getUserSheetName(userEmail: string): Promise<string> {
-  // Crear nombre de hoja basado en el email (sin caracteres especiales)
   const sheetName = `expenses_${userEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
   return sheetName;
 }
 
-// Función helper para verificar/crear hoja de usuario
 async function ensureUserSheet(
   sheets: any,
   spreadsheetId: string,
   sheetName: string
 ): Promise<string> {
   try {
-    // Obtener información del spreadsheet
     const spreadsheet = await sheets.spreadsheets.get({
       spreadsheetId: spreadsheetId,
     });
@@ -69,7 +63,6 @@ async function ensureUserSheet(
     );
 
     if (!sheetExists) {
-      // Crear nueva hoja para el usuario
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId: spreadsheetId,
         requestBody: {
@@ -85,7 +78,6 @@ async function ensureUserSheet(
         },
       });
 
-      // Agregar headers a la nueva hoja
       await sheets.spreadsheets.values.update({
         spreadsheetId: spreadsheetId,
         range: `${sheetName}!A1:E1`,
@@ -107,7 +99,6 @@ async function ensureUserSheet(
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticación
     const user = await getAuthenticatedUser(request);
     if (!user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -131,13 +122,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener nombre de hoja del usuario
     const sheetName = await getUserSheetName(user.email);
 
-    // Verificar/crear hoja del usuario
     await ensureUserSheet(sheets, spreadsheetId, sheetName);
 
-    // Obtener datos del usuario específico
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: `${sheetName}!A2:E`,
@@ -165,7 +153,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticación
     const user = await getAuthenticatedUser(request);
     if (!user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -173,7 +160,6 @@ export async function POST(request: NextRequest) {
 
     const { description, amount, category, type } = await request.json();
 
-    // Validaciones
     if (!description || !amount) {
       return NextResponse.json(
         { error: 'Descripción y monto son requeridos' },
@@ -199,13 +185,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener nombre de hoja del usuario
     const sheetName = await getUserSheetName(user.email);
 
-    // Verificar/crear hoja del usuario
     await ensureUserSheet(sheets, spreadsheetId, sheetName);
 
-    // Agregar gasto a la hoja del usuario específico
     await sheets.spreadsheets.values.append({
       spreadsheetId,
       range: `${sheetName}!A2:E`,

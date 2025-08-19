@@ -34,10 +34,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Obtener usuarios de la sheet
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: userSheetId,
-      range: 'A1:E100', // Cambiamos para incluir headers y ver mejor
+      range: 'A1:E100',
     });
 
     const rows = response.data.values || [];
@@ -45,8 +44,7 @@ export async function POST(request: NextRequest) {
     console.log('Headers:', rows[0]);
     console.log('Total filas:', rows.length);
 
-    // Buscar usuario por email (saltamos la primera fila que son headers)
-    const userRows = rows.slice(1); // Saltamos headers
+    const userRows = rows.slice(1);
     console.log('Filas de usuarios:', userRows);
 
     const user = userRows.find((row) => {
@@ -64,7 +62,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Comparar contraseña directamente (sin hash)
     const storedPassword = user[1] || '';
     console.log('Password almacenada:', storedPassword);
     console.log('Password enviada:', password);
@@ -80,7 +77,6 @@ export async function POST(request: NextRequest) {
 
     console.log('Login exitoso para:', email);
 
-    // Crear JWT token
     const token = jwt.sign(
       {
         email: user[0],
@@ -90,13 +86,12 @@ export async function POST(request: NextRequest) {
       { expiresIn: '7d' }
     );
 
-    // Actualizar last_login
     try {
       const userRowIndex =
         userRows.findIndex(
           (row) =>
             row[0] && row[0].toLowerCase().trim() === email.toLowerCase().trim()
-        ) + 2; // +2 porque saltamos headers y empezamos en 1
+        ) + 2;
       console.log('Actualizando last_login en fila:', userRowIndex);
       await sheets.spreadsheets.values.update({
         spreadsheetId: userSheetId,
@@ -118,12 +113,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Establecer cookie httpOnly
     responseObj.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 días
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return responseObj;

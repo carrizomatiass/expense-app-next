@@ -1,5 +1,4 @@
 // utils/currency.ts
-// Utilidades para manejo de moneda en formato argentino
 
 /**
  * Formatea un número para mostrar en formato argentino

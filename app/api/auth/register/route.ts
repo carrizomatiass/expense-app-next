@@ -5,7 +5,6 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password, name } = await request.json();
 
-    // Validaciones básicas
     if (!email || !password || !name) {
       return NextResponse.json(
         { error: 'Todos los campos son requeridos' },
@@ -20,7 +19,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -29,7 +27,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Configurar Google Auth
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
@@ -49,10 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si el usuario ya existe
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: userSheetId,
-      range: 'A2:E100', // Limitar el rango para mejor rendimiento
+      range: 'A2:E100',
     });
 
     const rows = response.data.values || [];
@@ -67,16 +63,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Guardar contraseña sin encriptar
     const userData = [
       email.toLowerCase().trim(),
-      password, // Sin hash, guardamos directamente
+      password,
       name.trim(),
       new Date().toISOString(),
-      '', // last_login vacío inicialmente
+      '',
     ];
 
-    // Agregar usuario a la sheet
     await sheets.spreadsheets.values.append({
       spreadsheetId: userSheetId,
       range: 'A2:E',
@@ -100,7 +94,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error detallado en registro:', error);
 
-    // Manejar errores específicos de Google Sheets
     if (error instanceof Error) {
       if (error.message.includes('Unable to parse range')) {
         return NextResponse.json(

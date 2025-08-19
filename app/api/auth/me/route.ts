@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-// Tipo para el payload del JWT
 interface JWTPayload {
   email: string;
   name: string;
@@ -20,7 +19,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verificar y decodificar el token
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'fallback-secret'

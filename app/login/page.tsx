@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-// Componente separado que usa useSearchParams
 function LoginForm() {
   const [formData, setFormData] = useState({
     email: '',
@@ -20,7 +19,6 @@ function LoginForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Mostrar mensajes basados en parámetros URL
     const errorParam = searchParams.get('error');
     const messageParam = searchParams.get('message');
 
@@ -68,9 +66,7 @@ function LoginForm() {
         console.log('Login exitoso, redirigiendo...');
         setSuccessMessage('¡Login exitoso! Redirigiendo...');
 
-        // Pequeño delay para mostrar el mensaje, luego redirigir
         setTimeout(() => {
-          // Usar window.location.href para forzar la navegación
           window.location.href = '/expenses';
         }, 500);
       } else {
@@ -86,13 +82,17 @@ function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-        <p className="text-gray-600">Accede a tu cuenta de control de gastos</p>
+    <Card className="w-full max-w-sm sm:max-w-md mx-auto shadow-lg border-0 sm:border">
+      <CardHeader className="text-center px-4 sm:px-6 pt-6 sm:pt-8">
+        <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold">
+          Iniciar Sesión
+        </CardTitle>
+        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+          Accede a tu cuenta de control de gastos
+        </p>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleLogin} className="space-y-4">
+      <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+        <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
           <div className="space-y-2">
             <Input
               type="email"
@@ -102,6 +102,7 @@ function LoginForm() {
               onChange={handleInputChange}
               required
               disabled={isLoading}
+              className="h-11 sm:h-12 text-base"
             />
           </div>
 
@@ -114,12 +115,13 @@ function LoginForm() {
               onChange={handleInputChange}
               required
               disabled={isLoading}
+              className="h-11 sm:h-12 text-base"
             />
           </div>
 
           {successMessage && (
             <Alert className="border-green-200 bg-green-50">
-              <AlertDescription className="text-green-700">
+              <AlertDescription className="text-green-700 text-sm sm:text-base">
                 {successMessage}
               </AlertDescription>
             </Alert>
@@ -127,15 +129,23 @@ function LoginForm() {
 
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-sm sm:text-base">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full h-11 sm:h-12 text-base font-semibold"
+            disabled={isLoading}
+          >
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Iniciando sesión...
+                <span className="text-sm sm:text-base">
+                  Iniciando sesión...
+                </span>
               </div>
             ) : (
               'Iniciar Sesión'
@@ -143,20 +153,21 @@ function LoginForm() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className="mt-6 sm:mt-8 text-center space-y-3 sm:space-y-4">
+          <p className="text-sm sm:text-base text-gray-600">
             ¿No tienes una cuenta?{' '}
             <Link
               href="/register"
-              className="text-blue-600 hover:text-blue-800 font-medium"
+              className="text-blue-600 hover:text-blue-800 font-medium underline-offset-4 hover:underline transition-colors"
             >
               Regístrate aquí
             </Link>
           </p>
-        </div>
 
-        <div className="mt-3 text-center">
-          <Link href="/" className="text-xs text-gray-500 hover:text-gray-700">
+          <Link
+            href="/"
+            className="inline-block text-xs sm:text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
             ← Volver al inicio
           </Link>
         </div>
@@ -165,32 +176,36 @@ function LoginForm() {
   );
 }
 
-// Componente de fallback para el loading
 function LoginFormSkeleton() {
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
-        <p className="text-gray-600">Accede a tu cuenta de control de gastos</p>
+    <Card className="w-full max-w-sm sm:max-w-md mx-auto shadow-lg border-0 sm:border animate-pulse">
+      <CardHeader className="text-center px-4 sm:px-6 pt-6 sm:pt-8">
+        <div className="h-6 sm:h-8 bg-gray-200 rounded-md mx-auto w-32 sm:w-40"></div>
+        <div className="h-4 sm:h-5 bg-gray-200 rounded mx-auto w-48 sm:w-64 mt-2"></div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+      <CardContent className="px-4 sm:px-6 pb-6 sm:pb-8">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="h-11 sm:h-12 bg-gray-200 rounded-md"></div>
+          <div className="h-11 sm:h-12 bg-gray-200 rounded-md"></div>
+          <div className="h-11 sm:h-12 bg-gray-200 rounded-md"></div>
+        </div>
+        <div className="mt-6 sm:mt-8 space-y-3">
+          <div className="h-4 bg-gray-200 rounded mx-auto w-48"></div>
+          <div className="h-3 bg-gray-200 rounded mx-auto w-24"></div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-// Componente principal
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8">
-      <Suspense fallback={<LoginFormSkeleton />}>
-        <LoginForm />
-      </Suspense>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg">
+        <Suspense fallback={<LoginFormSkeleton />}>
+          <LoginForm />
+        </Suspense>
+      </div>
     </div>
   );
 }
