@@ -27,18 +27,17 @@ export default function AuthHeader({ user }: AuthHeaderProps) {
       });
 
       if (response.ok) {
-        // Redirigir al login
         window.location.href = '/login';
       } else {
         console.error('Error en logout');
-        // Fallback: eliminar cookie manualmente y redirigir
+
         document.cookie =
           'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         window.location.href = '/login';
       }
     } catch (error) {
       console.error('Error al hacer logout:', error);
-      // Fallback: eliminar cookie manualmente y redirigir
+
       document.cookie =
         'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       window.location.href = '/login';
