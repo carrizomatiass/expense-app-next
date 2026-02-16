@@ -17,7 +17,7 @@ const modalPanel = { hidden: { opacity: 0, scale: 0.95, y: 20 }, visible: { opac
 
 const CONFIG = {
     nombre: "Nazarena",
-    fechaEvento: new Date("2026-03-16T22:00:00"),
+    fechaEvento: new Date("2026-04-11T22:00:00"),
     misa: { fecha: "16 de Marzo de 2026", hora: "20:00 hs", lugar: "Parroquia María Reina", direccion: "El Manantial, Tucumán", mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parroquia+Maria+Reina+El+Manantial+Tucuman" },
     fiesta: { hora: "22:00 hs", lugar: "Salón de Fiestas", direccion: "Narcizo Eventos, Lules, Tucumán", mapsUrl: "https://www.google.com/maps/search/?api=1&query=+Narcizo+Eventos+Lules+Tucuman" },
     dressCode: "Elegante",
