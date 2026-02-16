@@ -18,8 +18,9 @@ const modalPanel = { hidden: { opacity: 0, scale: 0.95, y: 20 }, visible: { opac
 const CONFIG = {
     nombre: "Nazarena",
     fechaEvento: new Date("2026-04-11T22:00:00"),
-    misa: { fecha: "16 de Marzo de 2026", hora: "20:00 hs", lugar: "Parroquia María Reina", direccion: "El Manantial, Tucumán", mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parroquia+Maria+Reina+El+Manantial+Tucuman" },
-    fiesta: { hora: "22:00 hs", lugar: "Salón de Fiestas", direccion: "Narcizo Eventos, Lules, Tucumán", mapsUrl: "https://www.google.com/maps/search/?api=1&query=+Narcizo+Eventos+Lules+Tucuman" },
+    evento: { dia: "11", mes: "Abril", anio: "2026", hora: "22:00 hs" },
+    misa: { fecha: "16 de Marzo", hora: "20:00 hs", lugar: "Parroquia María Reina", direccion: "El Manantial, Tucumán", mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parroquia+Maria+Reina+El+Manantial+Tucuman" },
+    fiesta: { fecha: "11 de Abril de 2026", hora: "22:00 hs", lugar: "Salón de Fiestas", direccion: "Narcizo Eventos, Lules, Tucumán", mapsUrl: "https://www.google.com/maps/search/?api=1&query=+Narcizo+Eventos+Lules+Tucuman" },
     dressCode: "Elegante",
     dressCodeNota: "La gama del color celeste se reserva para la quinceañera.",
     fechaLimiteConfirmacion: "Viernes 13 de Marzo de 2026",
@@ -196,9 +197,9 @@ function Section2Fecha() {
                 </motion.div>
                 <h3 className="text-2xl text-white mb-6 frozen-title">FECHA DEL EVENTO</h3>
                 <motion.div className="frozen-card bg-white/25 backdrop-blur-sm rounded-3xl p-8 border-2 border-white/30 shadow-xl" whileHover={{ scale: 1.02 }}>
-                    <p className="text-5xl text-white frozen-name">16</p>
-                    <p className="text-xl text-[#E0F4FF] mt-2">de Marzo</p>
-                    <p className="text-3xl text-white mt-2 frozen-title">2026</p>
+                    <p className="text-5xl text-white frozen-name">{CONFIG.evento.dia}</p>
+                    <p className="text-xl text-[#E0F4FF] mt-2">de {CONFIG.evento.mes}</p>
+                    <p className="text-3xl text-white mt-2 frozen-title">{CONFIG.evento.anio}</p>
                 </motion.div>
             </motion.div>
         </motion.section>
@@ -224,7 +225,7 @@ function Section3Lugar() {
                     <motion.div className="frozen-card-light bg-white/80 rounded-3xl p-5 text-center border border-white/60" whileHover={{ y: -2, boxShadow: "0 12px 40px rgba(30,144,255,0.15)" }}>
                         <p className="text-[#194569] font-semibold text-lg">{CONFIG.misa.lugar}</p>
                         <p className="text-[#5F84A2] text-sm">{CONFIG.misa.direccion}</p>
-                        <div className="flex items-center justify-center gap-2 text-[#194569] mt-2"><Clock className="w-4 h-4 text-[#1e90ff]" />{CONFIG.misa.hora}</div>
+                        <div className="flex items-center justify-center gap-2 text-[#194569] mt-2"><Clock className="w-4 h-4 text-[#1e90ff]" />{CONFIG.misa.fecha} · {CONFIG.misa.hora}</div>
                         <a href={CONFIG.misa.mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 w-full py-3 rounded-full bg-gradient-to-r from-[#1e90ff] to-[#4169e1] text-white flex items-center justify-center gap-2 text-sm">
                             <MapPin className="w-4 h-4" />CÓMO LLEGAR
                         </a>
